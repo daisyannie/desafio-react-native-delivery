@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable prefer-const */
 import React, {
   useEffect,
   useState,
@@ -73,34 +75,74 @@ const FoodDetails: React.FC = () => {
 
   useEffect(() => {
     async function loadFood(): Promise<void> {
-      // Load a specific food with extras based on routeParams id
+      const { data } = await api.get<Food>(`foods/${routeParams.id}`);
+      setFood(data);
+
+      const formattedExtras = data.extras.map(itemExtra => {
+        return {
+          ...itemExtra,
+          quantity: 0,
+        };
+      });
+
+      setExtras(formattedExtras);
     }
 
     loadFood();
   }, [routeParams]);
 
   function handleIncrementExtra(id: number): void {
-    // Increment extra quantity
+    setExtras(
+      extras.map(itemExtra => {
+        if (itemExtra.id !== id) {
+          return itemExtra;
+        }
+        return {
+          ...itemExtra,
+          quantity: itemExtra.quantity + 1,
+        };
+      }),
+    );
   }
 
   function handleDecrementExtra(id: number): void {
-    // Decrement extra quantity
+    setExtras(
+      extras.map(itemExtra => {
+        if (itemExtra.id !== id || itemExtra.quantity === 0) {
+          return itemExtra;
+        }
+        return {
+          ...itemExtra,
+          quantity: itemExtra.quantity - 1,
+        };
+      }),
+    );
   }
 
   function handleIncrementFood(): void {
-    // Increment food quantity
+    setFoodQuantity(foodQuantity + 1);
   }
 
   function handleDecrementFood(): void {
-    // Decrement food quantity
+    if (foodQuantity > 1) {
+      setFoodQuantity(foodQuantity - 1);
+    }
   }
 
-  const toggleFavorite = useCallback(() => {
-    // Toggle if food is favorite or not
+  const toggleFavorite = useCallback(async () => {
+    setIsFavorite(!isFavorite);
+    if (isFavorite) {
+      await api.post('favorites', food);
+    }
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
-    // Calculate cartTotal
+    const totalExtras = extras.reduce((accumulator, currentValue) => {
+      accumulator += currentValue.value * currentValue.quantity;
+
+      return accumulator;
+    }, 0 as number);
+    return formatValue(food.price * foodQuantity + totalExtras);
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
