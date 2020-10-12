@@ -65,7 +65,13 @@ const Dashboard: React.FC = () => {
           category_like: selectedCategory,
         },
       });
-      setFoods(data);
+
+      setFoods(
+        data.map((food: Food) => ({
+          ...food,
+          formattedPrice: formatValue(food.price),
+        })),
+      );
     }
 
     loadFoods();
